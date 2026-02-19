@@ -299,10 +299,11 @@ function connectToPlayer(targetId, playerName) {
             if (isConnected) {
                 isConnected = false;
                 isConnecting = false;
-                showToast('🔌', 'Disconnected', 'Host ended the session');
+                // Auto-reconnect instead of giving up
+                showToast('⏳', 'Reconnecting', 'Host connection lost — retrying...');
                 stopVisualizer();
                 stopRelayPlayback();
-                setTimeout(() => showView('join'), 2000);
+                autoReconnect(targetId, playerName);
             }
         });
 
@@ -324,6 +325,92 @@ function retryConnect(targetId, playerName) {
     }
     $('scanStatus').textContent = `Retrying… (${connectRetries}/${MAX_RETRIES})`;
     setTimeout(() => connectToPlayer(targetId, playerName), 1500);
+}
+
+// ===== AUTO-RECONNECT (for host disconnect/sleep) =====
+let reconnectAttempts = 0;
+let reconnectTimer = null;
+const MAX_RECONNECT = 10;
+const RECONNECT_DELAY = 3000;
+
+function autoReconnect(targetId, playerName) {
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+
+    reconnectAttempts++;
+    if (reconnectAttempts > MAX_RECONNECT) {
+        showToast('🔌', 'Disconnected', 'Could not reconnect to host');
+        reconnectAttempts = 0;
+        setTimeout(() => showView('join'), 2000);
+        return;
+    }
+
+    const statusEl = $('nowPlayingTitle') || $('scanStatus');
+    if (statusEl) statusEl.textContent = `Reconnecting... (${reconnectAttempts}/${MAX_RECONNECT})`;
+
+    reconnectTimer = setTimeout(() => {
+        // Recreate peer if destroyed
+        if (!peer || peer.destroyed) {
+            const listenerId = `jamsync-web-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+            peer = new Peer(listenerId, { debug: 0, config: ICE_CONFIG });
+            peer.on('open', () => doAutoReconnect(targetId, playerName));
+            peer.on('error', (err) => {
+                if (err.type === 'peer-unavailable') return;
+                autoReconnect(targetId, playerName);
+            });
+        } else {
+            doAutoReconnect(targetId, playerName);
+        }
+    }, RECONNECT_DELAY);
+}
+
+function doAutoReconnect(targetId, playerName) {
+    // Set up audio call handler
+    peer.off('call');
+    peer.on('call', (call) => {
+        call.answer();
+        call.on('stream', (stream) => {
+            playRemoteStream(stream);
+            reconnectAttempts = 0;
+            isConnected = true;
+            showToast('✅', 'Reconnected', 'Audio resumed!');
+        });
+        call.on('close', () => {
+            if (isConnected) {
+                isConnected = false;
+                showToast('⏳', 'Reconnecting', 'Host connection lost — retrying...');
+                stopVisualizer();
+                stopRelayPlayback();
+                autoReconnect(targetId, playerName);
+            }
+        });
+    });
+
+    playerConn = peer.connect(targetId, { reliable: true });
+
+    playerConn.on('open', () => {
+        playerConn.send({ type: 'JOIN', name: userName });
+    });
+
+    playerConn.on('data', (data) => handlePlayerMessage(data));
+
+    playerConn.on('close', () => {
+        if (isConnected) {
+            isConnected = false;
+            autoReconnect(targetId, playerName);
+        }
+    });
+
+    playerConn.on('error', () => {
+        autoReconnect(targetId, playerName);
+    });
+
+    // Timeout
+    setTimeout(() => {
+        if (!playerConn?.open) {
+            try { playerConn?.close(); } catch (e) { }
+            autoReconnect(targetId, playerName);
+        }
+    }, 8000);
 }
 
 // ================================================================
@@ -706,6 +793,10 @@ function showToast(icon, sender, text) {
 // CLEANUP
 // ================================================================
 function cleanup() {
+    // Clear reconnect first
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+    reconnectAttempts = 0;
+
     scanProbes.forEach(c => { try { c.close(); } catch (e) { } });
     scanProbes = [];
     if (playerConn) { try { playerConn.close(); } catch (e) { } playerConn = null; }
@@ -721,6 +812,7 @@ function cleanup() {
     webrtcAudioActive = false;
     relayAudioActive = false;
     connectRetries = 0;
+    pausedForMe = false;
 }
 
 // ================================================================

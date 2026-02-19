@@ -298,12 +298,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
-  // PAUSE FOR ME (mute locally only, don't affect actual playback)
+  // PAUSE FOR ME (mute tab locally, stream keeps going to listeners)
   if (msg.type === 'PAUSE_FOR_ME') {
+    const tabId = watchingTabId;
+    if (tabId) {
+      // Mute/unmute the actual browser tab — player hears from tab, not loopback
+      chrome.tabs.update(tabId, { muted: !!msg.muted }).catch(() => { });
+    }
+    // Also mute offscreen loopback as backup
     chrome.runtime.sendMessage({
       target: 'offscreen',
       type: 'PAUSE_FOR_ME',
-      muted: msg.muted  // true = mute, false = unmute
+      muted: msg.muted
     }).catch(() => { });
     return false;
   }

@@ -561,8 +561,175 @@ function connectToPlayer(targetPeerId, playerName) {
     });
 
     conn.on('close', () => {
-        sendStateUpdate({ mode: 'listener', connected: false, error: 'Disconnected' });
+        handleListenerDisconnect(targetPeerId, playerName);
     });
+
+    conn.on('error', (err) => {
+        console.warn('[Listener] Connection error:', err);
+        handleListenerDisconnect(targetPeerId, playerName);
+    });
+}
+
+// ===== AUTO-RECONNECT FOR LISTENER =====
+let reconnectAttempts = 0;
+let reconnectTimer = null;
+let lastTargetPeerId = null;
+let lastPlayerName = null;
+const MAX_RECONNECT_ATTEMPTS = 10;
+const RECONNECT_DELAY_MS = 3000;
+
+function handleListenerDisconnect(targetPeerId, playerName) {
+    // Store for reconnect
+    lastTargetPeerId = targetPeerId || lastTargetPeerId;
+    lastPlayerName = playerName || lastPlayerName;
+
+    // Don't reconnect if we're stopping intentionally
+    if (mode !== 'listener') return;
+
+    // Clear any existing reconnect timer
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+
+    reconnectAttempts++;
+    if (reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
+        sendStateUpdate({
+            mode: 'listener', connected: false,
+            error: 'Connection lost. Player may have stopped broadcasting.'
+        });
+        reconnectAttempts = 0;
+        return;
+    }
+
+    console.log(`[Listener] ⏳ Reconnect attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}...`);
+    sendStateUpdate({
+        mode: 'listener', connected: false, reconnecting: true,
+        reconnectAttempt: reconnectAttempts,
+        playerName: lastPlayerName,
+        error: `Reconnecting... (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`
+    });
+
+    reconnectTimer = setTimeout(() => {
+        if (mode !== 'listener') return;
+        attemptReconnect();
+    }, RECONNECT_DELAY_MS);
+}
+
+function attemptReconnect() {
+    if (!lastTargetPeerId || !peer || peer.destroyed) {
+        // Peer is dead, recreate it
+        const scannerId = `jamsync-scan-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+        peer = new Peer(scannerId, {
+            debug: 0,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    {
+                        urls: 'turn:openrelay.metered.ca:80',
+                        username: 'openrelayproject',
+                        credential: 'openrelayproject'
+                    },
+                    {
+                        urls: 'turn:openrelay.metered.ca:443',
+                        username: 'openrelayproject',
+                        credential: 'openrelayproject'
+                    }
+                ]
+            }
+        });
+        peer.on('open', () => {
+            doReconnect();
+        });
+        peer.on('error', (err) => {
+            if (err.type === 'peer-unavailable') return;
+            console.warn('[Reconnect] Peer error:', err);
+            handleListenerDisconnect(lastTargetPeerId, lastPlayerName);
+        });
+    } else {
+        doReconnect();
+    }
+}
+
+function doReconnect() {
+    if (!lastTargetPeerId || mode !== 'listener') return;
+
+    // Set up call handler for incoming audio
+    peer.off('call'); // Remove old listeners
+    peer.on('call', (call) => {
+        call.answer();
+        call.on('stream', (stream) => {
+            const ra = document.getElementById('remoteAudio');
+            ra.srcObject = stream;
+            ra.volume = 0.8;
+            ra.play().catch(() => { });
+            reconnectAttempts = 0; // Reset on success
+            sendStateUpdate({
+                mode: 'listener', connected: true, scanning: false, reconnecting: false,
+                playerName: lastPlayerName, roomId: roomId
+            });
+        });
+        call.on('close', () => {
+            handleListenerDisconnect(lastTargetPeerId, lastPlayerName);
+        });
+    });
+
+    const conn = peer.connect(lastTargetPeerId, { reliable: true });
+    playerDataConn = conn;
+
+    conn.on('open', () => {
+        conn.send({ type: 'JOIN', name: userName });
+    });
+
+    conn.on('data', (data) => {
+        if (data.type === 'WELCOME') {
+            reconnectAttempts = 0;
+            if (data.chatHistory) chatHistory = data.chatHistory;
+            sendStateUpdate({
+                mode: 'listener', scanning: false, connected: true, reconnecting: false,
+                playerName: data.playerName || lastPlayerName,
+                nowPlaying: data.nowPlaying, roomId: data.roomId
+            });
+        }
+        if (data.type === 'NOW_PLAYING') {
+            sendStateUpdate({
+                mode: 'listener', connected: true, scanning: false,
+                playerName: data.playerName || lastPlayerName,
+                nowPlaying: data.title
+            });
+        }
+        if (data.type === 'TAB_SWITCHED') {
+            sendStateUpdate({
+                mode: 'listener', connected: true, scanning: false,
+                playerName: data.playerName || lastPlayerName,
+                nowPlaying: data.nowPlaying
+            });
+        }
+        if (data.type === 'CHAT_MSG' && data.sender !== userName) {
+            notifyChat({ sender: data.sender, text: data.text, time: data.time || Date.now() });
+        }
+        if (data.type === 'REACTION') {
+            notifyReaction(data.emoji, data.sender);
+        }
+        if (data.type === 'MUSIC_TABS') {
+            try { chrome.runtime.sendMessage({ type: 'LISTENER_MUSIC_TABS', tabs: data.tabs }); } catch (e) { }
+        }
+    });
+
+    conn.on('close', () => {
+        handleListenerDisconnect(lastTargetPeerId, lastPlayerName);
+    });
+
+    conn.on('error', (err) => {
+        console.warn('[Reconnect] Connection error:', err);
+        handleListenerDisconnect(lastTargetPeerId, lastPlayerName);
+    });
+
+    // Timeout if connection doesn't establish
+    setTimeout(() => {
+        if (!conn.open && mode === 'listener') {
+            try { conn.close(); } catch (e) { }
+            handleListenerDisconnect(lastTargetPeerId, lastPlayerName);
+        }
+    }, 8000);
 }
 
 // ================================================================
@@ -618,6 +785,12 @@ function sendStateUpdate(state) {
 
 // ===== CLEANUP =====
 function stopAll() {
+    // Clear reconnect first so disconnect handlers don't trigger reconnect
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+    reconnectAttempts = 0;
+    lastTargetPeerId = null;
+    lastPlayerName = null;
+
     scanConnections.forEach(c => { try { c.close(); } catch (e) { } });
     scanConnections = [];
     activeCalls.forEach(c => { try { c.close(); } catch (e) { } });
@@ -634,4 +807,5 @@ function stopAll() {
     mode = null;
     mySlot = 0;
     chatHistory = [];
+    currentPlayerName = '';
 }
