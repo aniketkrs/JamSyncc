@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>JamSync — Listen Together</title>
+    <meta name="description" content="Share music with friends in real-time">
+    <meta name="theme-color" content="#0a0a0f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/app.css">
+</head>
+
+<body>
+
+    <!-- ===== DESKTOP VIEW — Install Extension ===== -->
+    <div id="desktopView" class="view">
+        <div class="app-shell">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg width="56" height="56" viewBox="0 0 100 100" fill="none">
+                        <circle cx="50" cy="50" r="45" stroke="url(#lg)" stroke-width="4" fill="none" opacity="0.3" />
+                        <circle cx="50" cy="50" r="30" stroke="url(#lg)" stroke-width="3" fill="none" opacity="0.5" />
+                        <circle cx="50" cy="50" r="15" fill="url(#lg)" />
+                        <defs>
+                            <linearGradient id="lg" x1="0" y1="0" x2="100" y2="100">
+                                <stop stop-color="#a78bfa" />
+                                <stop offset="1" stop-color="#6366f1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h1 class="logo-title">JamSync</h1>
+                <p class="logo-subtitle">Share music together, silently</p>
+            </div>
+
+            <div class="glass-card desktop-hero">
+                <div class="hero-icon">🎧</div>
+                <h2 class="hero-title">Get the Chrome Extension</h2>
+                <p class="hero-desc">Host rooms and share your tab audio silently — no screen sharing, no popups. Your
+                    listeners join from any device.</p>
+                <a href="https://github.com/aniketkrs/JamSyncc" target="_blank" class="btn-primary btn-download"
+                    id="btnDownloadExt">
+                    <span>⬇️ Download Extension</span>
+                </a>
+                <div class="hero-features">
+                    <div class="feature">🔇 Silent audio capture</div>
+                    <div class="feature">🎵 Works with Spotify, YouTube, etc.</div>
+                    <div class="feature">📤 Host & Join rooms</div>
+                    <div class="feature">💬 Chat & reactions built-in</div>
+                </div>
+            </div>
+
+            <div class="glass-card install-steps">
+                <h3 class="steps-title">How to install</h3>
+                <div class="step"><span class="step-num">1</span><span>Download the ZIP from GitHub</span></div>
+                <div class="step"><span class="step-num">2</span><span>Go to <code>chrome://extensions</code></span>
+                </div>
+                <div class="step"><span class="step-num">3</span><span>Turn on <strong>Developer mode</strong>
+                        (top-right)</span></div>
+                <div class="step"><span class="step-num">4</span><span>Click <strong>Load unpacked</strong> → select the
+                        folder</span></div>
+                <div class="step"><span class="step-num">5</span><span>Click the extension icon → Host or Join!</span>
+                </div>
+            </div>
+
+            <p class="desktop-footer">📱 On mobile? Open this link on your phone to <strong>join a room</strong></p>
+        </div>
+    </div>
+
+    <!-- ===== MOBILE JOIN VIEW ===== -->
+    <div id="joinView" class="view">
+        <div class="app-shell">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg width="48" height="48" viewBox="0 0 100 100" fill="none">
+                        <circle cx="50" cy="50" r="45" stroke="url(#lg2)" stroke-width="4" fill="none" opacity="0.3" />
+                        <circle cx="50" cy="50" r="30" stroke="url(#lg2)" stroke-width="3" fill="none" opacity="0.5" />
+                        <circle cx="50" cy="50" r="15" fill="url(#lg2)" />
+                        <defs>
+                            <linearGradient id="lg2" x1="0" y1="0" x2="100" y2="100">
+                                <stop stop-color="#a78bfa" />
+                                <stop offset="1" stop-color="#6366f1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h1 class="logo-title">JamSync</h1>
+                <p class="logo-subtitle">Join the jam 🎵</p>
+            </div>
+
+            <div class="glass-card join-card">
+                <label class="field-label">Your Name</label>
+                <input type="text" id="nameInput" class="input-field" placeholder="Enter your name" maxlength="20"
+                    autocomplete="off">
+
+                <label class="field-label mt-16">Room Code</label>
+                <input type="text" id="roomCodeInput" class="input-field room-code-input" placeholder="ABC123"
+                    maxlength="10" autocomplete="off">
+
+                <button class="btn-primary" id="btnJoinRoom">
+                    <span>🎧 Join the Jam</span>
+                </button>
+            </div>
+
+            <div class="install-hint" id="installHint" style="display:none">
+                <button class="btn-install" id="btnInstall">📲 Install App</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SCANNING VIEW ===== -->
+    <div id="scanView" class="view">
+        <div class="app-shell">
+            <div class="scan-section">
+                <div class="scan-animation">
+                    <div class="scan-ring ring-1"></div>
+                    <div class="scan-ring ring-2"></div>
+                    <div class="scan-ring ring-3"></div>
+                    <div class="scan-center">📡</div>
+                </div>
+                <h2 class="scan-title">Finding the host…</h2>
+                <p class="scan-sub" id="scanStatus">Scanning for active broadcasters</p>
+            </div>
+            <div id="playerList" class="player-list"></div>
+            <div class="scan-actions">
+                <button class="btn-secondary" id="btnRescan">🔄 Rescan</button>
+                <button class="btn-secondary btn-ghost" id="btnCancelScan">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== LISTENER VIEW — Beautiful Animated Player ===== -->
+    <div id="listenerView" class="view">
+        <div class="app-shell listener-shell">
+            <div class="listener-header">
+                <div class="header-left">
+                    <div class="header-logo-sm">♪</div>
+                    <span class="header-brand">JamSync</span>
+                </div>
+                <div class="connection-pill" id="connectionPill">
+                    <div class="conn-dot"></div>
+                    <span id="connText">Connecting…</span>
+                </div>
+            </div>
+
+            <!-- Room Code + Share -->
+            <div class="glass-card room-share-card">
+                <div class="room-display">
+                    <span class="room-label">Room</span>
+                    <span class="room-code" id="listenerRoomCode">------</span>
+                </div>
+                <div class="share-buttons">
+                    <button class="btn-share" id="btnListenerShare">📤 Share</button>
+                    <button class="btn-copy" id="btnListenerCopy">📋 Copy</button>
+                </div>
+            </div>
+
+            <!-- Now Playing — Animated Samsung/Google-style panel -->
+            <div class="glass-card np-card animated-player">
+                <!-- Animated background gradient -->
+                <div class="np-bg-glow"></div>
+
+                <div class="np-top">
+                    <span class="np-label">NOW PLAYING</span>
+                    <span class="np-player-name" id="npPlayerName">—</span>
+                </div>
+
+                <div class="np-track-container">
+                    <div class="np-track" id="npTrack">Waiting for audio…</div>
+                </div>
+
+                <!-- Audio Visualizer Bars -->
+                <div class="visualizer" id="visualizer">
+                    <div class="viz-bar" style="--i:1"></div>
+                    <div class="viz-bar" style="--i:2"></div>
+                    <div class="viz-bar" style="--i:3"></div>
+                    <div class="viz-bar" style="--i:4"></div>
+                    <div class="viz-bar" style="--i:5"></div>
+                    <div class="viz-bar" style="--i:6"></div>
+                    <div class="viz-bar" style="--i:7"></div>
+                    <div class="viz-bar" style="--i:8"></div>
+                    <div class="viz-bar" style="--i:9"></div>
+                    <div class="viz-bar" style="--i:10"></div>
+                    <div class="viz-bar" style="--i:11"></div>
+                    <div class="viz-bar" style="--i:12"></div>
+                    <div class="viz-bar" style="--i:13"></div>
+                    <div class="viz-bar" style="--i:14"></div>
+                    <div class="viz-bar" style="--i:15"></div>
+                    <div class="viz-bar" style="--i:16"></div>
+                    <div class="viz-bar" style="--i:17"></div>
+                    <div class="viz-bar" style="--i:18"></div>
+                    <div class="viz-bar" style="--i:19"></div>
+                    <div class="viz-bar" style="--i:20"></div>
+                </div>
+
+                <!-- Playback Controls -->
+                <div class="playback-row">
+                    <button class="ctrl-btn" id="btnPrev" title="Previous">⏮</button>
+                    <button class="ctrl-btn ctrl-main" id="btnToggle" title="Play/Pause">
+                        <div class="ctrl-ring"></div>
+                        ⏯
+                    </button>
+                    <button class="ctrl-btn" id="btnNext" title="Next">⏭</button>
+                </div>
+
+                <div class="reaction-row">
+                    <button class="rx-btn" data-emoji="🔥">🔥</button>
+                    <button class="rx-btn" data-emoji="❤️">❤️</button>
+                    <button class="rx-btn" data-emoji="😂">😂</button>
+                    <button class="rx-btn" data-emoji="👏">👏</button>
+                    <button class="rx-btn" data-emoji="🎉">🎉</button>
+                    <button class="rx-btn" data-emoji="👎">👎</button>
+                </div>
+            </div>
+
+            <!-- Audio Status Banner -->
+            <div class="glass-card audio-status-card" id="audioStatusCard" style="display:none">
+                <div class="audio-status-icon">🔊</div>
+                <div class="audio-status-text" id="audioStatusText">Audio stream connected</div>
+            </div>
+
+            <!-- Chat -->
+            <div class="glass-card chat-card">
+                <div class="chat-header" id="chatToggle">
+                    <span class="chat-title">💬 Chat</span>
+                    <span class="chat-badge" id="chatBadge" style="display:none">0</span>
+                    <span class="chat-chevron" id="chatChevron">▼</span>
+                </div>
+                <div class="chat-body" id="chatBody" style="display:none">
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input-row">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Type a message…"
+                            maxlength="200">
+                        <button class="btn-send" id="chatSend">↑</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-disconnect" id="btnDisconnect">Leave Room</button>
+        </div>
+    </div>
+
+    <!-- Overlays -->
+    <div id="reactionOverlay" class="reaction-overlay"></div>
+    <div id="toastContainer" class="toast-container"></div>
+    <!-- CRITICAL: No crossorigin on WebRTC audio! playsinline for iOS -->
+    <audio id="remoteAudio" playsinline></audio>
+
+    <!-- Pause Choice Modal -->
+    <div id="pauseModal" class="pause-modal" style="display:none">
+        <div class="pause-modal-card glass-card">
+            <div class="pause-modal-title">⏸ Pause Playback</div>
+            <div class="pause-modal-desc">How would you like to pause?</div>
+            <button class="pause-opt" id="btnPauseMe">
+                <span>🔇</span>
+                <div><strong>Pause for me only</strong><br><small>Others will still hear the music</small></div>
+            </button>
+            <button class="pause-opt" id="btnPauseAll">
+                <span>⏸</span>
+                <div><strong>Pause for everyone</strong><br><small>Music will stop for all listeners</small></div>
+            </button>
+            <button class="pause-cancel" id="btnPauseDismiss">Cancel</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="/app.js"></script>
+</body>
+
+</html>

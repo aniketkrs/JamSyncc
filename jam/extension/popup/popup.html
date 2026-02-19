@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JamSync</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body data-theme="dark">
+
+  <!-- ===== IDLE VIEW ===== -->
+  <div id="idleView" class="view active">
+    <div class="header-bar">
+      <div class="header-left">
+        <div class="header-logo">♪</div>
+        <span class="header-title">JamSync</span>
+      </div>
+      <button class="theme-toggle" id="themeToggle1" aria-label="Toggle theme"></button>
+    </div>
+
+    <div class="hero-section">
+      <div class="hero-icon">🎶</div>
+      <p class="hero-text">Stream music together on the same WiFi</p>
+    </div>
+
+    <div class="glass-card name-card">
+      <label class="input-label">Your name</label>
+      <input type="text" id="nameInput" class="input-field" placeholder="Enter your name" maxlength="20">
+    </div>
+
+    <div class="role-cards">
+      <button class="role-card" id="btnPlayer">
+        <div class="role-icon">🎧</div>
+        <div class="role-info">
+          <span class="role-title">Player</span>
+          <span class="role-desc">Share your music</span>
+        </div>
+        <span class="role-arrow">›</span>
+      </button>
+      <button class="role-card" id="btnListener">
+        <div class="role-icon">📡</div>
+        <div class="role-info">
+          <span class="role-title">Listener</span>
+          <span class="role-desc">Join someone's stream</span>
+        </div>
+        <span class="role-arrow">›</span>
+      </button>
+    </div>
+
+    <div class="glass-card manual-join">
+      <label class="input-label">Or join with room code</label>
+      <div class="join-row">
+        <input type="text" id="manualRoomCode" class="input-field" placeholder="ABC123" maxlength="10"
+          style="text-transform:uppercase;">
+        <button class="btn-join" id="btnJoinManual">Join</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PLAYER SELECT VIEW ===== -->
+  <div id="selectPlayerView" class="view">
+    <div class="header-bar">
+      <div class="header-left">
+        <div class="header-logo">♪</div>
+        <span class="header-title">Select Player</span>
+      </div>
+      <button class="theme-toggle" id="themeToggle2" aria-label="Toggle theme"></button>
+    </div>
+
+    <div class="glass-card scanning-card">
+      <div id="scanStatus" class="scan-status">
+        <div class="scan-spinner"></div>
+        <span>Scanning for Players…</span>
+      </div>
+    </div>
+
+    <div id="playerList" class="player-list"></div>
+
+    <div class="bottom-actions">
+      <button class="btn-secondary" id="btnRescan">🔄 Rescan</button>
+      <button class="btn-secondary btn-danger" id="btnCancelScan">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ===== PLAYER VIEW ===== -->
+  <div id="playerView" class="view">
+    <div class="header-bar">
+      <div class="header-left">
+        <div class="header-logo">♪</div>
+        <span class="header-title">Broadcasting</span>
+      </div>
+      <button class="theme-toggle" id="themeToggle3" aria-label="Toggle theme"></button>
+    </div>
+
+    <!-- Room Code -->
+    <div class="glass-card room-card">
+      <span class="room-label">Room Code</span>
+      <span class="room-code" id="playerRoomCode">------</span>
+    </div>
+
+    <!-- Now Playing -->
+    <div class="glass-card now-playing-card">
+      <div class="np-header">
+        <span class="np-label">Now Playing</span>
+        <span class="np-badge" id="playerListenerCount">0 listeners</span>
+      </div>
+      <div class="np-title" id="playerNowPlaying">Waiting for audio…</div>
+      <!-- Playback Controls -->
+      <div class="playback-controls">
+        <button class="ctrl-btn" id="btnPrev" title="Previous">⏮</button>
+        <button class="ctrl-btn ctrl-play" id="btnTogglePlay" title="Play/Pause">⏯</button>
+        <button class="ctrl-btn" id="btnNext" title="Next">⏭</button>
+      </div>
+      <!-- Reactions -->
+      <div class="reaction-bar">
+        <button class="reaction-btn" data-emoji="🔥">🔥</button>
+        <button class="reaction-btn" data-emoji="❤️">❤️</button>
+        <button class="reaction-btn" data-emoji="😂">😂</button>
+        <button class="reaction-btn" data-emoji="👏">👏</button>
+        <button class="reaction-btn" data-emoji="🎉">🎉</button>
+        <button class="reaction-btn" data-emoji="👎">👎</button>
+      </div>
+    </div>
+
+    <!-- Music Tabs -->
+    <div class="glass-card music-tabs-card">
+      <div class="section-header">
+        <span class="section-title">🎵 Music Tabs</span>
+        <button class="btn-mini" id="btnRefreshTabs">↻</button>
+      </div>
+      <div id="musicTabsList" class="music-tabs-list">
+        <div class="empty-state">No music tabs detected</div>
+      </div>
+    </div>
+
+    <!-- Tab Switch Approval Banner (hidden by default) -->
+    <div id="tabSwitchApproval" class="tab-switch-approval" style="display:none;"></div>
+
+    <!-- Chat -->
+    <div class="glass-card chat-card">
+      <div class="section-header chat-header" id="chatTogglePlayer">
+        <span class="section-title">💬 Chat</span>
+        <span class="chat-badge" id="chatBadgePlayer" style="display:none">0</span>
+        <span class="chat-chevron">▼</span>
+      </div>
+      <div class="chat-body" id="chatBodyPlayer" style="display:none">
+        <div class="chat-messages" id="chatMessagesPlayer"></div>
+        <div class="chat-input-row">
+          <input type="text" class="chat-input" id="chatInputPlayer" placeholder="Type a message…" maxlength="200">
+          <button class="btn-send" id="chatSendPlayer">↑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Listeners -->
+    <div class="glass-card listeners-card">
+      <div class="section-header">
+        <span class="section-title">👥 Listeners</span>
+      </div>
+      <div id="listenersList" class="listeners-list">
+        <div class="empty-state">No one yet…</div>
+      </div>
+    </div>
+
+    <button class="btn-stop" id="btnStopPlayer">Stop Broadcasting</button>
+  </div>
+
+  <!-- ===== LISTENER VIEW ===== -->
+  <div id="listenerView" class="view">
+    <div class="header-bar">
+      <div class="header-left">
+        <div class="header-logo">♪</div>
+        <span class="header-title">Listening</span>
+      </div>
+      <button class="theme-toggle" id="themeToggle4" aria-label="Toggle theme"></button>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="glass-card status-card">
+      <div class="status-pill" id="listenerStatusPill">
+        <div class="status-dot connecting"></div>
+        <span id="listenerStatusText">Connecting…</span>
+      </div>
+    </div>
+
+    <!-- Now Playing -->
+    <div class="glass-card now-playing-card">
+      <div class="np-header">
+        <span class="np-label" id="listenerPlayerName">Player</span>
+      </div>
+      <div class="np-title" id="listenerNowPlaying">Waiting…</div>
+      <!-- Playback Controls (sends request to Player) -->
+      <div class="playback-controls">
+        <button class="ctrl-btn" id="btnListenerPrev" title="Previous">⏮</button>
+        <button class="ctrl-btn ctrl-play" id="btnListenerTogglePlay" title="Play/Pause">⏯</button>
+        <button class="ctrl-btn" id="btnListenerNext" title="Next">⏭</button>
+      </div>
+      <!-- Reactions -->
+      <div class="reaction-bar">
+        <button class="reaction-btn" data-emoji="🔥">🔥</button>
+        <button class="reaction-btn" data-emoji="❤️">❤️</button>
+        <button class="reaction-btn" data-emoji="😂">😂</button>
+        <button class="reaction-btn" data-emoji="👏">👏</button>
+        <button class="reaction-btn" data-emoji="🎉">🎉</button>
+        <button class="reaction-btn" data-emoji="👎">👎</button>
+      </div>
+    </div>
+
+    <!-- Music Tabs (from Player) -->
+    <div class="glass-card music-tabs-card">
+      <div class="section-header">
+        <span class="section-title">🎵 Player's Music Tabs</span>
+        <button class="btn-mini" id="btnListenerRefreshTabs">↻</button>
+      </div>
+      <div id="listenerMusicTabsList" class="music-tabs-list">
+        <div class="empty-state">Waiting for Player's tabs…</div>
+      </div>
+    </div>
+
+    <!-- Volume -->
+    <div class="glass-card volume-card">
+      <label class="input-label">🔊 Volume</label>
+      <input type="range" id="volumeSlider" min="0" max="100" value="80" class="volume-slider">
+    </div>
+
+    <!-- Chat -->
+    <div class="glass-card chat-card">
+      <div class="section-header chat-header" id="chatToggleListener">
+        <span class="section-title">💬 Chat</span>
+        <span class="chat-badge" id="chatBadgeListener" style="display:none">0</span>
+        <span class="chat-chevron">▼</span>
+      </div>
+      <div class="chat-body" id="chatBodyListener" style="display:none">
+        <div class="chat-messages" id="chatMessagesListener"></div>
+        <div class="chat-input-row">
+          <input type="text" class="chat-input" id="chatInputListener" placeholder="Type a message…" maxlength="200">
+          <button class="btn-send" id="chatSendListener">↑</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-stop" id="btnStopListener">Disconnect</button>
+  </div>
+
+  <!-- Toast Alert Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Floating Reaction Container -->
+  <div id="reactionOverlay" class="reaction-overlay"></div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>

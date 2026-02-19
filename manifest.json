@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "JamSync",
+  "version": "1.7.0",
+  "description": "Stream music to friends on the same WiFi — works with Spotify, YouTube, Apple Music, and more!",
+  "permissions": [
+    "tabCapture",
+    "offscreen",
+    "activeTab",
+    "storage",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://api.ipify.org/*",
+    "https://open.spotify.com/*",
+    "https://music.youtube.com/*",
+    "https://www.youtube.com/*",
+    "https://music.apple.com/*",
+    "https://music.amazon.com/*",
+    "https://api.qrserver.com/*",
+    "https://music.amazon.in/*",
+    "https://music.amazon.co.uk/*",
+    "https://soundcloud.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://open.spotify.com/*",
+        "https://music.youtube.com/*",
+        "https://www.youtube.com/*",
+        "https://music.apple.com/*",
+        "https://music.amazon.com/*",
+        "https://music.amazon.in/*",
+        "https://music.amazon.co.uk/*",
+        "https://soundcloud.com/*"
+      ],
+      "js": [
+        "content/controller.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JamSync</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body data-theme="dark">
+
+  <!-- ===== IDLE VIEW ===== -->
+  <div id="idleView" class="view active">
+    <div class="header-bar">
+      <div class="header-left">
+        <div class="header-logo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+        </div>
+        <span class="header-title">JamSync</span>
+      </div>
+      <button class="theme-toggle" id="themeToggle1" aria-label="Toggle theme"></button>
+    </div>
+
+    <div class="hero-section">
+      <div class="hero-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="18" cy="16" r="3" />
+        </svg>
+      </div>
+      <p class="hero-text">Stream music together on the same WiFi</p>
+    </div>
+
+    <div class="glass-card name-card">
+      <label class="input-label">Your name</label>
+      <input type="text" id="nameInput" class="input-field" placeholder="Enter your name" maxlength="20">
+    </div>
+
+    <div class="role-cards">
+      <button class="role-card" id="btnPlayer">
+        <div class="role-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+            <path
+              d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+          </svg>
+        </div>
+        <div class="role-info">
+          <span class="role-title">Player</span>
+          <span class="role-desc">Share your music</span>
+        </div>
+        <span class="role-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </span>
+      </button>
+      <button class="role-card" id="btnListener">
+        <div class="role-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9" />
+            <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.4" />
+            <circle cx="12" cy="12" r="2" />
+            <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.4" />
+            <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1" />
+          </svg>
+        </div>
+        <div class="role-info">
+          <span class="role-title">Listener</span>
+          <span class="role-desc">Join someone's stream</span>
+        </div>
+        <span class="role-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </span>
+      </button>
+    </div>
+
+    <div class="glass-card manual-join">
+      <label class="input-label">Or join with room code</label>
+      <div class="join-row">
+        <input type="text" id="manualRoomCode" class="input-field" placeholder="ABC123" maxlength="10"
+          style="text-transform:uppercase;">
+        <button class="btn-join" id="btnJoinManual">Join</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PLAYER SELECT VIEW ===== -->
+  <div id="selectPlayerView" class="view">
+    <div class="header-bar">
+      <div class="header-left">
+        <div class="header-logo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+        </div>
+        <span class="header-title">Select Player</span>
+      </div>
+      <button class="theme-toggle" id="themeToggle2" aria-label="Toggle theme"></button>
+    </div>
+
+    <div class="glass-card scanning-card">
+      <div id="scanStatus" class="scan-status">
+        <div class="scan-spinner"></div>
+        <span>Scanning for Players…</span>
+      </div>
+    </div>
+
+    <div id="playerList" class="player-list"></div>
+
+    <div class="bottom-actions">
+      <button class="btn-secondary" id="btnRescan">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10" />
+          <polyline points="1 20 1 14 7 14" />
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+        </svg>
+        Rescan
+      </button>
+      <button class="btn-secondary btn-danger" id="btnCancelScan">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ===== PLAYER VIEW ===== -->
+  <div id="playerView" class="view">
+    <div class="header-bar">
+      <div class="header-left">
+        <div class="header-logo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+        </div>
+        <span class="header-title">Broadcasting</span>
+      </div>
+      <button class="theme-toggle" id="themeToggle3" aria-label="Toggle theme"></button>
+    </div>
+
+    <!-- Room Code -->
+    <div class="glass-card room-card">
+      <span class="room-label">Room Code</span>
+      <span class="room-code" id="playerRoomCode">------</span>
+    </div>
+
+    <!-- QR Code & Share -->
+    <div class="glass-card share-card">
+      <div class="share-qr-section">
+        <div class="qr-container" id="qrContainer">
+          <canvas id="qrCanvas" width="160" height="160"></canvas>
+        </div>
+        <div class="share-info">
+          <p class="share-title">📲 Invite Listeners</p>
+          <p class="share-desc">Scan the QR code or share the link to let friends join from any device!</p>
+          <div class="wifi-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+              <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+              <circle cx="12" cy="20" r="1" />
+            </svg>
+            <span>Same WiFi = instant connect</span>
+          </div>
+        </div>
+      </div>
+      <div class="share-actions">
+        <button class="btn-share-url" id="btnShareUrl">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+          </svg>
+          Share Link
+        </button>
+        <button class="btn-copy-url" id="btnCopyUrl">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+          Copy URL
+        </button>
+      </div>
+    </div>
+
+    <!-- Now Playing -->
+    <div class="glass-card now-playing-card">
+      <div class="np-header">
+        <span class="np-label">Now Playing</span>
+        <span class="np-badge" id="playerListenerCount">0 listeners</span>
+      </div>
+      <div class="np-title" id="playerNowPlaying">Waiting for audio…</div>
+      <!-- Playback Controls -->
+      <div class="playback-controls">
+        <button class="ctrl-btn" id="btnPrev" title="Previous">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+          </svg>
+        </button>
+        <button class="ctrl-btn ctrl-play" id="btnTogglePlay" title="Play/Pause">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </button>
+        <button class="ctrl-btn" id="btnNext" title="Next">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+          </svg>
+        </button>
+      </div>
+      <!-- Reactions -->
+      <div class="reaction-bar">
+        <button class="reaction-btn" data-emoji="🔥">🔥</button>
+        <button class="reaction-btn" data-emoji="❤️">❤️</button>
+        <button class="reaction-btn" data-emoji="😂">😂</button>
+        <button class="reaction-btn" data-emoji="👏">👏</button>
+        <button class="reaction-btn" data-emoji="🎉">🎉</button>
+        <button class="reaction-btn" data-emoji="👎">👎</button>
+      </div>
+    </div>
+
+    <!-- Music Tabs -->
+    <div class="glass-card music-tabs-card">
+      <div class="section-header">
+        <span class="section-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+          Music Tabs
+        </span>
+        <button class="btn-mini" id="btnRefreshTabs">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10" />
+            <polyline points="1 20 1 14 7 14" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
+        </button>
+      </div>
+      <div id="musicTabsList" class="music-tabs-list">
+        <div class="empty-state">No music tabs detected</div>
+      </div>
+    </div>
+
+    <!-- Tab Switch Approval Banner (hidden by default) -->
+    <div id="tabSwitchApproval" class="tab-switch-approval" style="display:none;"></div>
+
+    <!-- Chat -->
+    <div class="glass-card chat-card">
+      <div class="section-header chat-header" id="chatTogglePlayer">
+        <span class="section-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          Chat
+        </span>
+        <span class="chat-badge" id="chatBadgePlayer" style="display:none">0</span>
+        <span class="chat-chevron">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </span>
+      </div>
+      <div class="chat-body" id="chatBodyPlayer" style="display:none">
+        <div class="chat-messages" id="chatMessagesPlayer"></div>
+        <div class="chat-input-row">
+          <input type="text" class="chat-input" id="chatInputPlayer" placeholder="Type a message…" maxlength="200">
+          <button class="btn-send" id="chatSendPlayer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Listeners -->
+    <div class="glass-card listeners-card">
+      <div class="section-header">
+        <span class="section-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          Listeners
+        </span>
+      </div>
+      <div id="listenersList" class="listeners-list">
+        <div class="empty-state">No one yet…</div>
+      </div>
+    </div>
+
+    <button class="btn-stop" id="btnStopPlayer">Stop Broadcasting</button>
+  </div>
+
+  <!-- ===== LISTENER VIEW ===== -->
+  <div id="listenerView" class="view">
+    <div class="header-bar">
+      <div class="header-left">
+        <div class="header-logo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+        </div>
+        <span class="header-title">Listening</span>
+      </div>
+      <button class="theme-toggle" id="themeToggle4" aria-label="Toggle theme"></button>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="glass-card status-card">
+      <div class="status-pill" id="listenerStatusPill">
+        <div class="status-dot connecting"></div>
+        <span id="listenerStatusText">Connecting…</span>
+      </div>
+    </div>
+
+    <!-- Now Playing -->
+    <div class="glass-card now-playing-card">
+      <div class="np-header">
+        <span class="np-label" id="listenerPlayerName">Player</span>
+      </div>
+      <div class="np-title" id="listenerNowPlaying">Waiting…</div>
+      <!-- Playback Controls (sends request to Player) -->
+      <div class="playback-controls">
+        <button class="ctrl-btn" id="btnListenerPrev" title="Previous">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+          </svg>
+        </button>
+        <button class="ctrl-btn ctrl-play" id="btnListenerTogglePlay" title="Play/Pause">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </button>
+        <button class="ctrl-btn" id="btnListenerNext" title="Next">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+          </svg>
+        </button>
+      </div>
+      <!-- Search Bar -->
+      <div class="search-bar">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input type="text" id="searchInputListener" class="search-input" placeholder="Search on Player's tab…"
+          maxlength="100">
+        <button class="search-btn" id="btnSearchListener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </button>
+      </div>
+      <!-- Reactions -->
+      <div class="reaction-bar">
+        <button class="reaction-btn" data-emoji="🔥">🔥</button>
+        <button class="reaction-btn" data-emoji="❤️">❤️</button>
+        <button class="reaction-btn" data-emoji="😂">😂</button>
+        <button class="reaction-btn" data-emoji="👏">👏</button>
+        <button class="reaction-btn" data-emoji="🎉">🎉</button>
+        <button class="reaction-btn" data-emoji="👎">👎</button>
+      </div>
+    </div>
+
+    <!-- Music Tabs (from Player) -->
+    <div class="glass-card music-tabs-card">
+      <div class="section-header">
+        <span class="section-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+          Player's Music Tabs
+        </span>
+        <button class="btn-mini" id="btnListenerRefreshTabs">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10" />
+            <polyline points="1 20 1 14 7 14" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
+        </button>
+      </div>
+      <div id="listenerMusicTabsList" class="music-tabs-list">
+        <div class="empty-state">Waiting for Player's tabs…</div>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="glass-card chat-card">
+      <div class="section-header chat-header" id="chatToggleListener">
+        <span class="section-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          Chat
+        </span>
+        <span class="chat-badge" id="chatBadgeListener" style="display:none">0</span>
+        <span class="chat-chevron">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </span>
+      </div>
+      <div class="chat-body" id="chatBodyListener" style="display:none">
+        <div class="chat-messages" id="chatMessagesListener"></div>
+        <div class="chat-input-row">
+          <input type="text" class="chat-input" id="chatInputListener" placeholder="Type a message…" maxlength="200">
+          <button class="btn-send" id="chatSendListener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-stop" id="btnStopListener">Disconnect</button>
+  </div>
+
+  <!-- Toast Alert Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Floating Reaction Container -->
+  <div id="reactionOverlay" class="reaction-overlay"></div>
+
+  <!-- Pause Choice Modal -->
+  <div id="pauseChoiceModal" class="modal-overlay" style="display:none">
+    <div class="glass-card modal-card">
+      <div class="modal-title">⏸ Pause Playback</div>
+      <div class="modal-desc">How would you like to pause?</div>
+      <button class="btn-modal-option" id="btnPauseForMe">
+        <span class="modal-option-icon">🔇</span>
+        <div class="modal-option-text">
+          <strong>Pause for me only</strong>
+          <small>Others will still hear the music</small>
+        </div>
+      </button>
+      <button class="btn-modal-option" id="btnPauseForAll">
+        <span class="modal-option-icon">⏸</span>
+        <div class="modal-option-text">
+          <strong>Pause for everyone</strong>
+          <small>Music will stop for all listeners</small>
+        </div>
+      </button>
+      <button class="btn-modal-cancel" id="btnPauseCancel">Cancel</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>
