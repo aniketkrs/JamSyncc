@@ -182,6 +182,15 @@ function startMusicTabPolling() {
         }
       } catch (e) {
         // Content script might not be available - fall back to tab title
+        chrome.tabs.get(watchingTabId, (tab) => {
+          if (tab && tab.title) {
+            chrome.runtime.sendMessage({
+              target: 'offscreen',
+              type: 'UPDATE_NOW_PLAYING',
+              tabTitle: tab.title
+            }).catch(() => { });
+          }
+        });
       }
     }
   }, 3000);

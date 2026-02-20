@@ -680,7 +680,7 @@ function setupControlListeners() {
 
 function sendControl(action) {
     if (playerConn?.open) {
-        playerConn.send({ type: 'CONTROL_REQUEST', action, sender: userName });
+        playerConn.send({ type: 'CONTROL_REQUEST', action: action });
         showToast('🎮', 'Control', action.toLowerCase());
     }
 }
