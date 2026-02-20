@@ -1,7 +1,7 @@
 // JamSync v3 — Offscreen Audio Engine
 // Multi-player slots, tab switching, chat relay, reactions
 
-const MAX_PLAYER_SLOTS = 20;
+const MAX_PLAYER_SLOTS = 3; // FIXED: Reduced from 20 to 3 to prevent PeerJS cloud server IP rate-limiting
 const SCAN_TIMEOUT = 8000;
 
 let peer = null;

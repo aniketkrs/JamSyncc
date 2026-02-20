@@ -496,6 +496,10 @@ function handleStateUpdate(state) {
         $('playerRoomCode').textContent = state.roomId || '------';
         $('playerNowPlaying').textContent = cleanTitle(state.nowPlaying) || 'Waiting for audio…';
         $('playerListenerCount').textContent = `${state.listenerCount || 0} listener${(state.listenerCount || 0) !== 1 ? 's' : ''}`;
+
+        // Ensure music tabs are fetched when restoring the player view
+        requestMusicTabs();
+
         // Regenerate QR code
         if (state.roomId) {
             generateQR(getRoomShareUrl(state.roomId), $('qrCanvas'), 160);

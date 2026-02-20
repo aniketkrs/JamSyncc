@@ -5,22 +5,25 @@ let offscreenCreated = false;
 let currentState = { mode: 'idle' };
 
 // Restore session state after service worker restart
-try {
-  chrome.storage.session.get(['jamsync_session'], (r) => {
-    if (r?.jamsync_session?.mode && r.jamsync_session.mode !== 'idle') {
-      currentState = r.jamsync_session;
-      console.log('[BG] Session restored:', currentState.mode);
-      // Ask offscreen for fresh state (it persists across sw restarts)
-      ensureOffscreen().then(() => {
-        setTimeout(() => {
-          try {
-            chrome.runtime.sendMessage({ target: 'offscreen', type: 'REQUEST_STATE' }).catch(() => { });
-          } catch (e) { }
-        }, 500);
-      });
-    }
-  });
-} catch (e) { }
+let storageReady = new Promise((resolve) => {
+  try {
+    chrome.storage.session.get(['jamsync_session'], (r) => {
+      if (r?.jamsync_session?.mode && r.jamsync_session.mode !== 'idle') {
+        currentState = r.jamsync_session;
+        console.log('[BG] Session restored:', currentState.mode);
+        // Ask offscreen for fresh state (it persists across sw restarts)
+        ensureOffscreen().then(() => {
+          setTimeout(() => {
+            try {
+              chrome.runtime.sendMessage({ target: 'offscreen', type: 'REQUEST_STATE' }).catch(() => { });
+            } catch (e) { }
+          }, 500);
+        });
+      }
+      resolve();
+    });
+  } catch (e) { resolve(); }
+});
 let watchingTabId = null;
 let musicTabPollInterval = null;
 let knownMusicTabs = [];
@@ -218,13 +221,15 @@ function tabUpdateListener(tabId, changeInfo) {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // GET STATE — return stored state AND ask offscreen for a fresh one
   if (msg.type === 'GET_STATE') {
-    // First, immediately respond with what we have
-    const storedState = { ...currentState };
-    // Also ask offscreen to send a fresh STATE_UPDATE
-    try {
-      chrome.runtime.sendMessage({ target: 'offscreen', type: 'REQUEST_STATE' }).catch(() => { });
-    } catch (e) { }
-    sendResponse(storedState);
+    storageReady.then(() => {
+      // First, immediately respond with what we have
+      const storedState = { ...currentState };
+      // Also ask offscreen to send a fresh STATE_UPDATE
+      try {
+        chrome.runtime.sendMessage({ target: 'offscreen', type: 'REQUEST_STATE' }).catch(() => { });
+      } catch (e) { }
+      sendResponse(storedState);
+    });
     return true;
   }
 

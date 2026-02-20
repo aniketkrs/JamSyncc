@@ -186,7 +186,7 @@ function doScan(rid) {
 
     let found = 0;
     let done = 0;
-    const total = 20;
+    const total = 3; // FIXED: Reduced from 20 to 3 to prevent PeerJS cloud server IP rate-limiting
 
     for (let slot = 1; slot <= total; slot++) {
         const peerId = `jamsync-${rid}-p${slot}`;
