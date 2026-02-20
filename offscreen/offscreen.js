@@ -331,19 +331,50 @@ async function captureAudio(streamId) {
 let relayCtx = null;
 let relayProcessor = null;
 
-function startAudioRelay() {
+async function startAudioRelay() {
     if (!audioStream || relayCtx) return;
     try {
         relayCtx = new AudioContext({ sampleRate: 22050 });
         const source = relayCtx.createMediaStreamSource(audioStream);
-        relayProcessor = relayCtx.createScriptProcessor(4096, 1, 1);
 
+        const workletCode = `
+        class AudioRelayProcessor extends AudioWorkletProcessor {
+            constructor() {
+                super();
+                this.bufferSize = 4096;
+                this.buffer = new Float32Array(this.bufferSize);
+                this.ptr = 0;
+            }
+            process(inputs) {
+                const input = inputs[0];
+                if (input && input.length > 0 && input[0].length > 0) {
+                    const samples = input[0];
+                    for (let i = 0; i < samples.length; i++) {
+                        this.buffer[this.ptr++] = samples[i];
+                        if (this.ptr >= this.bufferSize) {
+                            // Send copies of the buffer once filled
+                            this.port.postMessage(this.buffer.slice());
+                            this.ptr = 0;
+                        }
+                    }
+                }
+                return true;
+            }
+        }
+        registerProcessor('audio-relay-processor', AudioRelayProcessor);
+        `;
+
+        const blob = new Blob([workletCode], { type: 'application/javascript' });
+        const url = URL.createObjectURL(blob);
+        await relayCtx.audioWorklet.addModule(url);
+
+        relayProcessor = new AudioWorkletNode(relayCtx, 'audio-relay-processor');
         source.connect(relayProcessor);
         relayProcessor.connect(relayCtx.destination);
 
-        relayProcessor.onaudioprocess = (e) => {
+        relayProcessor.port.onmessage = (e) => {
             if (connections.size === 0) return;
-            const samples = e.inputBuffer.getChannelData(0);
+            const samples = e.data; // Float32Array of length 4096
             // Float32 → Int16 for compression
             const int16 = new Int16Array(samples.length);
             for (let i = 0; i < samples.length; i++) {
@@ -352,11 +383,11 @@ function startAudioRelay() {
             const b64 = bufToBase64(int16.buffer);
             connections.forEach(({ conn }) => {
                 if (conn.open) {
-                    try { conn.send({ type: 'AUDIO_RELAY', d: b64 }); } catch (e) { }
+                    try { conn.send({ type: 'AUDIO_RELAY', d: b64 }); } catch (err) { }
                 }
             });
         };
-        console.log('[Player] ✅ Audio relay started (data channel fallback)');
+        console.log('[Player] ✅ Audio relay started (AudioWorklet fallback)');
     } catch (e) {
         console.error('[Player] Audio relay failed:', e);
     }

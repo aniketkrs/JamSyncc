@@ -423,26 +423,32 @@ setupChat('listener');
 // ===== SEARCH (Player) =====
 function doSearchPlayer() {
     const input = $('searchInputPlayer');
+    if (!input) return;
     const query = input.value.trim();
     if (!query) return;
     chrome.runtime.sendMessage({ type: 'SEARCH_SONG', query });
     input.value = '';
 }
-$('btnSearchPlayer').addEventListener('click', doSearchPlayer);
-$('searchInputPlayer').addEventListener('keydown', (e) => {
+const btnSearchPlayer = $('btnSearchPlayer');
+if (btnSearchPlayer) btnSearchPlayer.addEventListener('click', doSearchPlayer);
+const searchInputPlayer = $('searchInputPlayer');
+if (searchInputPlayer) searchInputPlayer.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') doSearchPlayer();
 });
 
 // ===== SEARCH (Listener) =====
 function doSearchListener() {
     const input = $('searchInputListener');
+    if (!input) return;
     const query = input.value.trim();
     if (!query) return;
     chrome.runtime.sendMessage({ type: 'LISTENER_SEARCH', query });
     input.value = '';
 }
-$('btnSearchListener').addEventListener('click', doSearchListener);
-$('searchInputListener').addEventListener('keydown', (e) => {
+const btnSearchListener = $('btnSearchListener');
+if (btnSearchListener) btnSearchListener.addEventListener('click', doSearchListener);
+const searchInputListener = $('searchInputListener');
+if (searchInputListener) searchInputListener.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') doSearchListener();
 });
 
